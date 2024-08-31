@@ -6,6 +6,40 @@ sprites.src = './sprites.png';
 const canvas = document.querySelector('canvas');
 const contexto = canvas.getContext('2d');
 
+const flecha= {
+    spritesX: 279,
+    spritesy: 120,
+    largura: 33,
+    altura: 116,
+    x: 45,
+    y: -116,
+    estaNoChao: false,
+    velocidade: 0,
+    gravidade: 0.25,
+
+    atualiza(){
+        flecha.velocidade += flecha.gravidade;
+        flecha.y += flecha.velocidade;
+
+        if (fazColisao(flecha, chao)) {
+            flecha.velocidade = 0;
+            flecha.estaNoChao = true;  // Marca que está no chão
+        } else {
+            flecha.estaNoChao = false;  // Marca que está no ar
+        }
+    },
+
+    desenha(){
+        contexto.drawImage(
+            sprites,
+            flecha.spritesX, flecha.spritesy,
+            flecha.largura , flecha.altura,
+            flecha.x, flecha.y,
+            flecha.largura, flecha.altura,
+        );
+    }
+};
+
 
 
 const chao = {
@@ -43,7 +77,7 @@ const player = {
     largura: 42,
     altura: 43,
     x: 39,
-    y: 0,
+    y: 500,
     pulo: 4.6,
     velocidade: 0,
     gravidade: 0.25,
@@ -100,8 +134,8 @@ function mudaParaTela(novaTela) {
 const Telas = {
     INICIO: {
         desenha() {
-            chao.desenha();
             player.desenha();
+             chao.desenha();
         },
         click() {
             mudaParaTela(Telas.JOGO);
@@ -116,6 +150,7 @@ Telas.JOGO = {
     desenha() {
         chao.desenha();
         player.desenha();
+        flecha.desenha();
     },
     onkeydown(e) {  // Controle de movimento com as teclas A e D
         if (e.code === "Space") {
@@ -130,6 +165,7 @@ Telas.JOGO = {
     
     atualiza() {
         player.atualiza();
+        flecha.atualiza();
     }
 };
 
