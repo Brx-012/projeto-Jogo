@@ -43,7 +43,7 @@ class Flecha {
         this.x = Math.random() * (canvas.width - this.largura); // Posição X aleatória
         this.y = -116; // Começa na parte superior
         this.velocidade = 0;
-        this.gravidade = 0.15;
+        this.gravidade = 0.10;
     }
 
     atualiza() {
@@ -306,9 +306,12 @@ Telas.JOGO = {
 
 Telas.GameOver = {
     desenha() {
+
+        desenhaEstrelasColetadas();
         contexto.font = '30px Arial';
         contexto.fillStyle = 'red';
         contexto.fillText('Game Over', canvas.width / 2 - 100, canvas.height / 2);
+        
     },
     click() {
         // Reiniciar o jogo ao voltar para a tela de início
