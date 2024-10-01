@@ -44,6 +44,7 @@ class Flecha {
         this.y = -116; // Começa na parte superior
         this.velocidade = 0;
         this.gravidade = 0.10;
+        
     }
 
     atualiza() {
@@ -51,11 +52,14 @@ class Flecha {
         this.y += this.velocidade;
 
         if (fazColisaoFlechaChao(this, chao)) {
-            this.velocidade = 0;
-            this.y = chao.y - this.altura;  // Coloca a flecha no chão
-            this.x = Math.random() * (canvas.width - this.largura); // Nova posição X aleatória
-            this.y = -this.altura; // Reinicia a posição Y para cima
+
+            removedobuffer(nome);
+            this.x = SotearX(this.largura);
+            this.y = canvas.width + this.altura;
+            this.velocidade = Math.random() * 20 + 1;
+
         }
+
     }
 
     desenha() {
@@ -68,13 +72,53 @@ class Flecha {
         );
     }
 }
+function SotearX (largura){
+    let contadorDeSeguranca = 50;
+    let X;
 
+    for( let i = 0; i < contadorDeSeguranca; i++) {
+        X = Math.random()* canvas.width - largura;
+        let valido = true;
+
+        Object.keys(buffer).forEach(chave => {
+            if(!valido) return;
+            if( X >= buffer[chave]&& X <= buffer[chave]) valido = false;
+        });
+
+        if(valido) return X;
+    }
+    return canvas.width + 1;
+
+}
+
+
+
+function removedobuffer(nome){
+    const aux = {};
+
+    Object.keys(buffer).forEach(chave => {
+        if(chave !== nome) aux[chave] =buffer[chave];
+
+    });
+    Object.assign(buffer, aux);
+}
+
+const buffer = [];
 const flechas = [];
 
-function criarFlechas() {
-    for (let i = 0; i < 10; i++) {
-        flechas.push(new Flecha()); // Adiciona uma nova flecha ao array
+function criarFlechas(quantflecha) {
+
+    buffer.length = 0;
+
+    while (quantflecha-- > 0) {
+
+        const f = new Flecha(); 
+        f.x = SotearX(f.largura); 
+        flechas.push(f);
+        
+        
     }
+    return flechas;
 }
 
 const star = {
@@ -82,10 +126,9 @@ const star = {
     spritesY: 537,
     largura: 34,
     altura: 30,
-    x: Math.random() * (canvas.width - 34), // Posição X aleatória inicial
-    y: chao.y - 30,  // Coloca a estrela acima do chão
-    visivel: true,  // Controle de visibilidade
-
+    x: Math.random() * (canvas.width - 34), 
+    y: chao.y - 30,  
+    visivel: true, 
     desenha() {
         if (this.visivel) {
             contexto.drawImage(
@@ -99,9 +142,9 @@ const star = {
     },
 
     reaparecer() {
-        this.x = Math.random() * (canvas.width - this.largura);  // Nova posição X aleatória
-        this.y = chao.y - this.altura;  // Coloca a estrela acima do chão
-        this.visivel = true;  // Torna a estrela visível novamente
+        this.x = Math.random() * (canvas.width - this.largura);  
+        this.y = chao.y - this.altura;  
+        this.visivel = true; 
     }
 };
 
@@ -229,7 +272,7 @@ function desenhaEstrelasColetadas() {
         sprites,
         star.spritesX, star.spritesY,  
         star.largura, star.altura,     
-        10, 10,                        // Posição no canvas (canto superior esquerdo)
+        10, 10,                       
         star.largura, star.altura      
     );
 
@@ -264,8 +307,8 @@ Telas.JOGO = {
     desenha() {
         chao.desenha();
         player.desenha();
-        flechas.forEach(flecha => flecha.desenha()); // Desenha todas as flechas
-        life.desenha();  // Desenha os corações de vida
+        flechas.forEach(flecha => flecha.desenha()); 
+        life.desenha();  
         star.desenha();
         desenhaEstrelasColetadas();
     },
@@ -285,7 +328,7 @@ Telas.JOGO = {
         flechas.forEach(flecha => flecha.atualiza()); // Atualiza todas as flechas
 
         if (fazColisaoPlayerStar(player, star)) {
-            // Ação em caso de colisão com a estrela
+           
             star.reaparecer();
         }
 
@@ -314,10 +357,11 @@ Telas.GameOver = {
         
     },
     click() {
-        // Reiniciar o jogo ao voltar para a tela de início
+        
         player.x = 39; // reseta a posição do player
         player.vida = 3;  // Reseta a vida do player
         flechas.length = 0; // Limpa as flechas
+        buffer.length = 0;
         player.estrelasColetadas = 0; //RESETA AS ESTRELAS COLETADAS
         criarFlechas(); // Cria novas flechas
         mudaParaTela(Telas.INICIO); // Muda para a tela inicial
@@ -329,7 +373,7 @@ Telas.GameOver = {
 
 // Inicia o jogo
 function inicia() {
-    criarFlechas(); // Inicializa as flechas
+    criarFlechas(5); // Inicializa as flechas
     mudaParaTela(Telas.INICIO); // Muda para a tela inicial
 
     canvas.addEventListener('click', () => {
