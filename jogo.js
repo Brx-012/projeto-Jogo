@@ -1,15 +1,20 @@
 console.log('[DevBrx] ProjetoJogo');
 
-const sprites = new Image();
-sprites.src = './sprites.png';
+/** Variáveis Globais */
 
 const canvas = document.querySelector('canvas');
 const contexto = canvas.getContext('2d');
+const sprites = new Image();
+const flechas = [];
+let buffer = {};
+let telaAtiva = {};
+
+sprites.src = './sprites.png';
 
 const chao = {
     spriteX: 3,
     spriteY: 571,
-    largura: 896,
+    largura: canvas.width,
     altura: 78,
     x: 0,
     y: canvas.height - 78,
@@ -17,109 +22,101 @@ const chao = {
         contexto.drawImage(
             sprites,
             this.spriteX, this.spriteY,
-            this.largura, this.altura,
+            this.largura - 4, this.altura,
             this.x, this.y,
             this.largura, this.altura,
         );
     }
 };
-function fazColisao(player, chao) {
-    const playerY = player.y + player.altura;
-    const chaoY = chao.y;
 
-    if (playerY >= chaoY) {
-        player.y = chao.y - player.altura;  
-        return true;
-    }
-    return false;
-}
+const life = {
+    spritesX: 733,
+    spritesY: 4,
+    largura: 52,
+    altura: 44,
+    x: 843,
+    y: 4,
 
-class Flecha {
-    constructor() {
-        this.spritesX = 279;
-        this.spritesY = 120;
-        this.largura = 33;
-        this.altura = 116;
-        this.x = Math.random() * (canvas.width - this.largura); // Posição X aleatória
-        this.y = -116; // Começa na parte superior
-        this.velocidade = 0;
-        this.gravidade = 0.10;
-        
+    desenha() {
+        for (let i = 0; i < player.vida; i++) {
+            contexto.drawImage(
+                sprites,
+                this.spritesX, this.spritesY,
+                this.largura, this.altura,
+                this.x - (i * (this.largura + 10)), // Desenha os corações espaçados
+                this.y,
+                this.largura, this.altura
+            );
+        }
     }
+};
+
+const player = {
+    spriteX: 44,
+    spriteY: 518,
+    largura: 42,
+    altura: 43,
+    x: 39,
+    y: chao.y - 43,
+    pulo: 4.6,
+    velocidade: 0,
+    gravidade: 0.25,
+    andar: 10,
+    estaNoChao: false,
+    vida: 3,
+    estrelasColetadas: 0,
+    hspd: 0,
+    ultimaDirecao: 'direita',
+    invencibilidade: 60 * 2,
+
+    pula() {
+        if (this.estaNoChao) {  
+            this.velocidade = -this.pulo;
+            this.estaNoChao = false;  
+        }
+    },
 
     atualiza() {
         this.velocidade += this.gravidade;
         this.y += this.velocidade;
+        this.invencibilidade = Math.min(60 * 2 + 1, this.invencibilidade + 1);
 
-        if (fazColisaoFlechaChao(this, chao)) {
+        this.x += this.hspd;
+        if (!estaDentroDaTela(this)) this.x -= this.hspd;
 
-            removedobuffer(nome);
-            this.x = SotearX(this.largura);
-            this.y = canvas.width + this.altura;
-            this.velocidade = Math.random() * 20 + 1;
-
+        if (fazColisao(player, chao)) {
+            this.velocidade = 0;
+            this.estaNoChao = true;  
+        } else {
+            this.estaNoChao = false;  
         }
-
-    }
+    },
 
     desenha() {
+        if (this.invencibilidade < 60 * 2) {
+            contexto.globalAlpha = this.invencibilidade % 25 > 12 ? 1 : 0;
+        }
+
+        let x = this.x;
+
+        if (this.ultimaDirecao === 'esquerda') {
+            contexto.scale(-1, 1);
+            contexto.translate(-canvas.width, 0);
+            x = canvas.width - this.largura - this.x;
+        }
+
         contexto.drawImage(
             sprites,
-            this.spritesX, this.spritesY,
+            this.spriteX, this.spriteY,
             this.largura, this.altura,
-            this.x, this.y,
+            x, this.y,
             this.largura, this.altura,
         );
+
+        contexto.resetTransform();
+        contexto.globalAlpha = 1;
     }
-}
-function SotearX (largura){
-    let contadorDeSeguranca = 50;
-    let X;
-
-    for( let i = 0; i < contadorDeSeguranca; i++) {
-        X = Math.random()* canvas.width - largura;
-        let valido = true;
-
-        Object.keys(buffer).forEach(chave => {
-            if(!valido) return;
-            if( X >= buffer[chave]&& X <= buffer[chave]) valido = false;
-        });
-
-        if(valido) return X;
-    }
-    return canvas.width + 1;
-
-}
-
-
-
-function removedobuffer(nome){
-    const aux = {};
-
-    Object.keys(buffer).forEach(chave => {
-        if(chave !== nome) aux[chave] =buffer[chave];
-
-    });
-    Object.assign(buffer, aux);
-}
-
-const buffer = [];
-const flechas = [];
-
-function criarFlechas(quantflecha) {
-
-    buffer.length = 0;
-
-    while (quantflecha-- > 0) {
-
-        const f = new Flecha(); 
-        f.x = SotearX(f.largura); 
-        flechas.push(f);
-        
-        
-    }
-    return flechas;
-}
+};
 
 const star = {
     spritesX: 256,
@@ -148,146 +145,6 @@ const star = {
     }
 };
 
-function fazColisaoPlayerStar(player, star) {
-    const starAltura = star.y + star.altura;
-    const starLargura = star.x + star.largura;
-    const playerAltura = player.y + player.altura;
-    const playerLargura = player.x + player.largura;
-
-    if (starAltura >= player.y && star.y <= playerAltura && starLargura >= player.x && star.x <= playerLargura) {
-        console.log("Houve colisão");
-        player.estrelasColetadas ++;
-        return true;
-    }
-
-    return false;
-}
-
-const life = {
-    spritesX: 733,
-    spritesY: 4,
-    largura: 52,
-    altura: 44,
-    x: 843,
-    y: 4,
-
-    desenha() {
-        for (let i = 0; i < player.vida; i++) {
-            contexto.drawImage(
-                sprites,
-                this.spritesX, this.spritesY,
-                this.largura, this.altura,
-                this.x - (i * (this.largura + 10)), // Desenha os corações espaçados
-                this.y,
-                this.largura, this.altura
-            );
-        }
-    }
-};
-
-function fazColisaoFlechaPlayer(player, flecha) {
-    const flechaY = flecha.y + flecha.altura;
-    const playerY = player.y;
-    const flechaX = flecha.x;
-    const flechaLargura = flecha.x + flecha.largura;
-    const playerX = player.x;
-    const playerLargura = player.x + player.largura;
-
-    if (flechaY >= playerY && flechaX <= playerLargura && flechaLargura >= playerX) {
-        flecha.y = -116; 
-        flecha.velocidade = 0;  
-        return true;
-    }
-
-    return false;
-}
-
-function fazColisaoFlechaChao(flecha, chao) {
-    const flechaY = flecha.y + flecha.altura;
-    const chaoY = chao.y;
-
-    if (flechaY >= chaoY) {
-        flecha.y = chao.y - flecha.altura;  
-        return true;
-    }
-    return false;
-}
-
-const player = {
-    spriteX: 44,
-    spriteY: 518,
-    largura: 42,
-    altura: 43,
-    x: 39,
-    y: 525,
-    pulo: 4.6,
-    velocidade: 0,
-    gravidade: 0.25,
-    andar: 10,
-    estaNoChao: false,
-    vida: 3,
-    estrelasColetadas: 0,
-
-    pula() {
-        if (this.estaNoChao) {  
-            this.velocidade = -this.pulo;
-            this.estaNoChao = false;  
-        }
-    },
-
-    moveEsquerda() {  
-        this.x -= this.andar;
-    },
-
-    moveDireita() {  
-        this.x += this.andar;
-    },
-
-    atualiza() {
-        this.velocidade += this.gravidade;
-        this.y += this.velocidade;
-
-        if (fazColisao(player, chao)) {
-            this.velocidade = 0;
-            this.estaNoChao = true;  
-        } else {
-            this.estaNoChao = false;  
-        }
-    },
-
-    desenha() {
-        contexto.drawImage(
-            sprites,
-            this.spriteX, this.spriteY,
-            this.largura, this.altura,
-            this.x, this.y,
-            this.largura, this.altura,
-        );
-    }
-};
-
-function desenhaEstrelasColetadas() {
-    // Desenha a estrela no canto superior esquerdo
-    contexto.drawImage(
-        sprites,
-        star.spritesX, star.spritesY,  
-        star.largura, star.altura,     
-        10, 10,                       
-        star.largura, star.altura      
-    );
-
-    // Desenha o número de estrelas coletadas ao lado da estrela
-    contexto.font = '20px Arial';
-    contexto.fillStyle = 'black';
-    contexto.fillText(`x ${player.estrelasColetadas}`, 50, 30); // Texto com o número de estrelas
-}
-
-// Telas do jogo
-let telaAtiva = {};
-function mudaParaTela(novaTela) {
-    telaAtiva = novaTela;
-}
-
 const Telas = {
     INICIO: {
         desenha() {
@@ -314,12 +171,28 @@ Telas.JOGO = {
     },
     
     onkeydown(e) {
-        if (e.code === "Space") {
-            player.pula();  
-        } else if (e.key === "a" || e.key === "A") {
-            player.moveEsquerda();  
-        } else if (e.key === "d" || e.key === "D") {
-            player.moveDireita();  
+        switch (e.key) {
+            case ' ': case 'Space':
+                player.pula();
+                break;
+
+            case 'a': case 'A':
+                player.hspd = -10;
+                player.ultimaDirecao = 'esquerda';
+                break;
+
+            case 'd': case 'D':
+                player.hspd = 10;
+                player.ultimaDirecao = 'direita';
+                break;
+        }
+    },
+
+    onkeyup(e) {
+        switch (e.key) {
+            case 'a': case 'A': case 'd': case 'D':
+                player.hspd = 0;
+                break;
         }
     },
 
@@ -334,9 +207,11 @@ Telas.JOGO = {
 
         // Verifica a colisão entre o player e as flechas
         flechas.forEach(flecha => {
-            if (fazColisaoFlechaPlayer(player, flecha)) {
+            if (fazColisaoFlechaPlayer(player, flecha) && player.invencibilidade >= 60 * 2) {
+                flecha.reinicia();
                 // Reduz a vida do player
                 player.vida--;
+                player.invencibilidade = 0;
 
                 // Se a vida do player chegar a 0, muda para a tela de Game Over
                 if (player.vida <= 0) {
@@ -349,7 +224,6 @@ Telas.JOGO = {
 
 Telas.GameOver = {
     desenha() {
-
         desenhaEstrelasColetadas();
         contexto.font = '30px Arial';
         contexto.fillStyle = 'red';
@@ -363,7 +237,7 @@ Telas.GameOver = {
         flechas.length = 0; // Limpa as flechas
         buffer.length = 0;
         player.estrelasColetadas = 0; //RESETA AS ESTRELAS COLETADAS
-        criarFlechas(); // Cria novas flechas
+        criarFlechas(5); // Cria novas flechas
         mudaParaTela(Telas.INICIO); // Muda para a tela inicial
     },
     atualiza(){
@@ -371,7 +245,163 @@ Telas.GameOver = {
     }
 };
 
-// Inicia o jogo
+/** Classes */
+
+class Flecha {
+    constructor(nome) {
+        this.nome = nome;
+        this.spritesX = 279;
+        this.spritesY = 120;
+        this.largura = 33;
+        this.altura = 116;
+        this.x = 0;
+        this.y = 0;
+        this.velocidade = 0;
+        this.gravidade = 0.10;
+        this.reinicia();
+    }
+
+    atualiza() {
+        this.velocidade += this.gravidade;
+        this.y += this.velocidade;
+        if (fazColisaoFlechaChao(this, chao)) this.reinicia();
+    }
+
+    reinicia() {
+        removedobuffer(this.nome);
+        this.y = 0 - this.altura;
+        this.x = SotearX(this.largura);
+        buffer[this.nome] = this.x;
+        this.velocidade = 0;
+        this.gravidade = Math.random() * 0.3 + 0.1;
+    }
+
+    desenha() {
+        contexto.drawImage(
+            sprites,
+            this.spritesX, this.spritesY,
+            this.largura, this.altura,
+            this.x, this.y,
+            this.largura, this.altura,
+        );
+    }
+}
+
+/** Funções de Colisão */
+
+function fazColisao(player, chao) {
+    const playerY = player.y + player.altura;
+    const chaoY = chao.y;
+
+    if (playerY >= chaoY) {
+        player.y = chao.y - player.altura;  
+        return true;
+    }
+    return false;
+}
+
+function fazColisaoPlayerStar(player, star) {
+    if (player.x <= star.x && player.x + player.largura >= star.x || player.x <= star.x + star.largura && player.x + player.largura >= star.x + star.largura) {
+        player.estrelasColetadas++;
+        return true;
+    }
+
+    return false;
+}
+
+function fazColisaoFlechaPlayer(player, flecha) {
+    if (flecha.y + flecha.altura >= player.y &&
+        ((player.x <= flecha.x + flecha.largura && player.x + player.largura >= flecha.x + flecha.largura) ||
+        (player.x <= flecha.x && player.x + player.largura >= flecha.x))) {
+        return true;
+    }
+
+    return false;
+}
+
+function fazColisaoFlechaChao(flecha, chao) {
+    const flechaY = flecha.y + flecha.altura;
+    const chaoY = chao.y;
+
+    if (flechaY >= chaoY) {
+        return true;
+    }
+    return false;
+}
+
+function estaDentroDaTela(obj) {
+    if (obj.x <= 0 || obj.x + obj.largura >= canvas.width) return false;
+    return true;
+}
+
+/** Funções Utilitárias */
+
+function SotearX (largura){
+    let contadorDeSeguranca = 50;
+    let X;
+
+    for( let i = 0; i < contadorDeSeguranca; i++) {
+        X = Math.random() * canvas.width - largura;
+        let valido = true;
+
+        Object.keys(buffer).forEach(chave => {
+            if(!valido) return;
+            if((buffer[chave] >= X && buffer[chave] <= X + largura) || (buffer[chave] + largura >= X && buffer[chave] + largura <= X + largura)) valido = false;
+        });
+
+        if (valido) return X;
+    }
+
+    return canvas.width + 1;
+
+}
+
+function removedobuffer(nome){
+    const aux = {};
+
+    Object.keys(buffer).forEach(chave => {
+        if(chave !== nome) aux[chave] = buffer[chave];
+    });
+    
+    buffer = aux;
+}
+
+function criarFlechas(quantFlechas) {
+
+    buffer.length = 0;
+
+    for (let i = 0; i < quantFlechas; i++) {
+
+        const f = new Flecha(`flecha-${i}`); 
+        f.x = SotearX(f.largura); 
+        flechas.push(f);
+        
+    }
+    return flechas;
+}
+
+function desenhaEstrelasColetadas() {
+    // Desenha a estrela no canto superior esquerdo
+    contexto.drawImage(
+        sprites,
+        star.spritesX, star.spritesY,  
+        star.largura, star.altura,     
+        10, 10,                       
+        star.largura, star.altura      
+    );
+
+    // Desenha o número de estrelas coletadas ao lado da estrela
+    contexto.font = '20px Arial';
+    contexto.fillStyle = 'black';
+    contexto.fillText(`x ${player.estrelasColetadas}`, 50, 30); // Texto com o número de estrelas
+}
+
+/** Funções da Engine do Jogo */
+
+function mudaParaTela(novaTela) {
+    telaAtiva = novaTela;
+}
+
 function inicia() {
     criarFlechas(5); // Inicializa as flechas
     mudaParaTela(Telas.INICIO); // Muda para a tela inicial
@@ -385,11 +415,16 @@ function inicia() {
             telaAtiva.onkeydown(e);
         }
     });
+    
+    window.addEventListener('keyup', (e) => {
+        if (telaAtiva.onkeyup) {
+            telaAtiva.onkeyup(e);
+        }
+    });
 
     loop(); // Inicia o loop do jogo
 }
 
-// Função de loop
 function loop() {
 
     contexto.clearRect(0, 0, canvas.width, canvas.height);
