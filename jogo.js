@@ -154,7 +154,7 @@ const shield = {
     y: chao.y -40,
     ativo: false,
     reaparecer: false,
-    tempoDuracao: 3000, 
+    tempoDuracao: 5000, 
     tempoReaparecer: 15000, 
 
 
@@ -219,17 +219,42 @@ const shield = {
 
 const Telas = {
     INICIO: {
-        desenha() {
-            player.desenha();
-            chao.desenha();
-            shield.desenha();
-        },
-        click() {
-            mudaParaTela(Telas.JOGO);
-        },
-        atualiza() {
-            
-        }
+        
+            desenha() {
+                contexto.clearRect(0, 0, canvas.width, canvas.height); // Limpa a tela
+        
+                // Título do Jogo
+                contexto.font = '40px Arial';
+                contexto.fillStyle = 'black';
+                contexto.fillText('Projeto Jogo - Versão 2.0', canvas.width / 2 - 180, 100);
+        
+                // Lista de Atualizações
+                contexto.font = '20px Arial';
+                contexto.fillStyle = 'black';
+                const updates = [
+                    'Melhora da movimentação deixando o jogo mais dinâmico e difícil.',
+                    'Melhoria das flechas, agora caem em tempos diferentes.',
+                    'Não é mais possível sair do mapa.',
+                    'Adição de invencibilidade ao perder vida, por tempo limitado.',
+                    'Novo item: Shield, protege por 5 segundos e reaparece a cada 15 segundos.'
+                ];
+        
+                for (let i = 0; i < updates.length; i++) {
+                    contexto.fillText(`• ${updates[i]}`, 100, 180 + (i * 30));
+                }
+        
+                // Instruções para iniciar o jogo
+                contexto.font = '25px Arial';
+                contexto.fillText('Clique para começar o jogo!', canvas.width / 2 - 150, canvas.height - 100);
+            },
+        
+            click() {
+                mudaParaTela(Telas.JOGO);
+            },
+        
+            atualiza() {}
+        
+        
     }
 };
 
@@ -291,7 +316,18 @@ Telas.JOGO = {
         }
 
         shield.desenhaCirculoEmVoltaDoPlayer(player);
-        
+
+        if( fazColisaoFlechaPlayer(player, Flecha) ){
+            if(shield.ativo){
+                
+                Flecha.reinicia();
+            }else{
+                 player.vida--;
+            }
+
+        }   
+
+
 
         
 
@@ -299,6 +335,10 @@ Telas.JOGO = {
         // Verifica a colisão entre o player e as flechas
         flechas.forEach(flecha => {
             if (fazColisaoFlechaPlayer(player, flecha) && player.invencibilidade >= 60 * 2) {
+                if(shield.ativo){
+                    
+                    flecha.reinicia();
+                }else {
                 flecha.reinicia();
                 // Reduz a vida do player
                 player.vida--;
@@ -308,6 +348,7 @@ Telas.JOGO = {
                 if (player.vida <= 0) {
                     mudaParaTela(Telas.GameOver);
                 }
+            }   
             }
         });
     }
@@ -380,23 +421,6 @@ class Flecha {
 }
 
 /** Funções de Colisão */
-
-function fazColisaoflechashield(player, shield, flecha) {
-    if (shield.ativo) {
-        // Calcula a distância entre o centro do player (shield) e a flecha
-        const distanciaX = (player.x + player.largura / 2) - (flecha.x + flecha.largura / 2);
-        const distanciaY = (player.y + player.altura / 2) - (flecha.y + flecha.altura / 2);
-        const distancia = Math.sqrt(distanciaX * distanciaX + distanciaY * distanciaY);
-
-        // Se a distância for menor ou igual ao raio do shield, há colisão
-        const raioDoShield = 50;  // O mesmo raio que você usou para desenhar o círculo
-        if (distancia <= raioDoShield) {
-            // Colisão detectada! Aqui você pode fazer a flecha desaparecer ou ser neutralizada
-            flecha.destruir();  // Por exemplo, uma função que remove a flecha
-            console.log("Flecha bloqueada pelo shield!");
-        }
-    }
-}
 
 
 
