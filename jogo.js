@@ -236,7 +236,10 @@ const Telas = {
                     'Melhoria das flechas, agora caem em tempos diferentes.',
                     'Não é mais possível sair do mapa.',
                     'Adição de invencibilidade ao perder vida, por tempo limitado.',
-                    'Novo item: Shield, protege por 5 segundos e reaparece a cada 15 segundos.'
+                    'Novo item: Shield, protege por 5 segundos e reaparece a cada 15 segundos.',
+                    'Use "A" para mover à esquerda', 
+                    'Use "D" para mover à direita', 
+                    'Use "Space" para pular', 
                 ];
         
                 for (let i = 0; i < updates.length; i++) {
