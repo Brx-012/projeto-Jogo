@@ -274,7 +274,11 @@ Telas.JOGO = {
 
     atualiza() {
         player.atualiza();
-        flechas.forEach(flecha => flecha.atualiza()); // Atualiza todas as flechas
+        flechas.forEach(flecha => flecha.atualiza());{
+            
+        }
+
+        
 
         if (fazColisaoPlayerStar(player, star)) {
            
@@ -376,6 +380,25 @@ class Flecha {
 }
 
 /** Funções de Colisão */
+
+function fazColisaoflechashield(player, shield, flecha) {
+    if (shield.ativo) {
+        // Calcula a distância entre o centro do player (shield) e a flecha
+        const distanciaX = (player.x + player.largura / 2) - (flecha.x + flecha.largura / 2);
+        const distanciaY = (player.y + player.altura / 2) - (flecha.y + flecha.altura / 2);
+        const distancia = Math.sqrt(distanciaX * distanciaX + distanciaY * distanciaY);
+
+        // Se a distância for menor ou igual ao raio do shield, há colisão
+        const raioDoShield = 50;  // O mesmo raio que você usou para desenhar o círculo
+        if (distancia <= raioDoShield) {
+            // Colisão detectada! Aqui você pode fazer a flecha desaparecer ou ser neutralizada
+            flecha.destruir();  // Por exemplo, uma função que remove a flecha
+            console.log("Flecha bloqueada pelo shield!");
+        }
+    }
+}
+
+
 
 function fazColisaoPlayerShield(player, shield){
     if (player.x <= shield.x && player.x + player.largura >= shield.x || player.x <= shield.x + shield.largura && player.x + player.largura >= shield.x + shield.largura) {
