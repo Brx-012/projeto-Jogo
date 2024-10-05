@@ -145,11 +145,84 @@ const star = {
     }
 };
 
+const shield = {
+    spritesX: 294,
+    spritesY: 520,
+    largura: 41,
+    altura: 40,
+    x: Math.random() * (canvas.width - 41),
+    y: chao.y -40,
+    ativo: false,
+    reaparecer: false,
+    tempoDuracao: 3000, 
+    tempoReaparecer: 15000, 
+
+
+    desenha() {
+        if (!this.ativo && !this.reaparecer) {
+            contexto.drawImage(
+                sprites,
+                this.spritesX, this.spritesY,
+                this.largura, this.altura,
+                this.x, this.y,
+                this.largura, this.altura
+            );
+        }
+    },
+
+    desenhaCirculoEmVoltaDoPlayer() {
+        if (this.ativo) {
+            contexto.beginPath();
+            contexto.arc(player.x + player.largura / 2, player.y + player.altura / 2, 50, 0, 2 * Math.PI);
+            contexto.strokeStyle = "rgba(0, 255, 0, 0.5)";  // Cor verde com transparência
+            contexto.lineWidth = 5;
+            contexto.stroke();
+        }
+    },
+
+
+    pegar() {
+        if (!this.ativo && !this.reaparecer) {
+            this.ativo = true;
+            this.iniciarContagemDuracao();
+        }
+    },
+
+    
+    iniciarContagemDuracao() {
+        setTimeout(() => {
+            this.ativo = false; 
+            this.iniciarContagemReaparecimento();
+            
+        }, this.tempoDuracao);
+    },
+    reposicionar() {
+        
+        this.x = Math.random() * (canvas.width - this.largura);  // Reposiciona o shield aleatoriamente
+        this.y = chao.y - 40; // Ajusta a posição Y do shield, se necessário
+        console.log('Escudo reposicionado!');
+        
+    },
+
+    
+    iniciarContagemReaparecimento() {
+        this.reaparecer =  true;
+        setTimeout(() => {
+        this.reposicionar();
+        this.reaparecer = false;
+            
+        }, this.tempoReaparecer);
+    }
+};
+    
+
+
 const Telas = {
     INICIO: {
         desenha() {
             player.desenha();
             chao.desenha();
+            shield.desenha();
         },
         click() {
             mudaParaTela(Telas.JOGO);
@@ -167,6 +240,9 @@ Telas.JOGO = {
         flechas.forEach(flecha => flecha.desenha()); 
         life.desenha();  
         star.desenha();
+        shield.desenha();
+        
+        
         desenhaEstrelasColetadas();
     },
     
@@ -204,6 +280,17 @@ Telas.JOGO = {
            
             star.reaparecer();
         }
+           
+        if(fazColisaoPlayerShield(player, shield)){
+            shield.pegar();
+             
+        }
+
+        shield.desenhaCirculoEmVoltaDoPlayer(player);
+        
+
+        
+
 
         // Verifica a colisão entre o player e as flechas
         flechas.forEach(flecha => {
@@ -220,6 +307,7 @@ Telas.JOGO = {
             }
         });
     }
+
 };
 
 Telas.GameOver = {
@@ -288,6 +376,15 @@ class Flecha {
 }
 
 /** Funções de Colisão */
+
+function fazColisaoPlayerShield(player, shield){
+    if (player.x <= shield.x && player.x + player.largura >= shield.x || player.x <= shield.x + shield.largura && player.x + player.largura >= shield.x + shield.largura) {
+        
+        return true;
+    }
+
+    return false;
+}
 
 function fazColisao(player, chao) {
     const playerY = player.y + player.altura;
